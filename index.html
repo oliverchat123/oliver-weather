@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Oliver ❆ Weather</title>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #5d8cd3, #1e3a8a);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      transition: background 1s ease-in-out;
+      overflow-y: auto;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #weather-container {
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .search-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    input, button {
+      padding: 12px;
+      border: none;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      font-size: 16px;
+      color: black;
+      outline: none;
+      cursor: pointer;
+      flex: 1;
+      min-width: 100px;
+      transition: background 0.3s ease;
+      /* Remove blue tap highlight on mobile */
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    #result-container {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    #weather-info {
+      font-weight: 600;
+      font-size: 22px;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    #temp-div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 10px;
+      position: relative;
+      /* Restored old style without sticky or scaling */
+    }
+
+    #description {
+      font-size: 18px;
+      margin-top: 5px;
+      color: white;
+    }
+
+    #weather-icon {
+      width: 80px;
+      height: 80px;
+      margin-top: 10px;
+    }
+
+    #details, #hourly-forecast, #weekly-forecast {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(15px);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    #hourly-forecast {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding: 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      color: white;
+    }
+
+    #hourly-forecast::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hourly-item {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 75px;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    #weekly-forecast {
+      display: flex;
+      flex-direction: column; /* vertical list */
+      gap: 10px;
+      max-width: 100%;
+      overflow-x: hidden;
+      user-select: none;
+    }
+    .glass-box {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 25px 20px;
+  color: white;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+#temp-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+#weather-icon {
+  width: 90px;
+  height: 90px;
+  margin: 10px 0;
+}
+
+#description {
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+    .day-item {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+      user-select: none;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .day-item:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.03);
+    }
+
+    .forecast-icon {
+      width: 40px;
+      height: 40px;
+      margin: 5px auto;
+      display: block;
+    }
+
+    #day-detail-modal {
+      position: fixed;
+      bottom: -100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      color: white;
+      padding: 20px;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.2);
+      width: 90vw;
+      max-width: 400px;
+      transition: bottom 0.4s ease;
+      z-index: 1000;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+.glass-box {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 25px 20px;
+  color: white;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+#temp-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+#weather-icon {
+  width: 90px;
+  height: 90px;
+  margin: 10px 0;
+}
+
+#description {
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+    #day-detail-modal.show {
+      bottom: 0;
+    }
+
+    #day-detail-modal h3 {
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+
+    #day-detail-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      cursor: pointer;
+      /* Also remove tap highlight here */
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+  <div id="weather-container">
+    <h2>Oliver Weather ❆</h2>
+    <div class="search-container">
+      <input type="text" id="city" placeholder="Enter city" />
+      <button id="search-btn">Search</button>
+    </div>
+    <button id="bb">ⵟ Use My Location</button>
+
+    <div id="result-container">
+      <div id="current-weather" class="glass-box">
+        <div id="weather-info"></div>
+        <div id="temp-div">
+        <p id="temperature"></p>
+        <img id="weather-icon" alt="Weather Icon" />
+        <p id="description"></p>
+      </div>
+    </div>
+      
+       <div id="details"></div>
+       <div id="hourly-forecast"></div>
+       <div id="weekly-forecast"></div>
+     </div>
+  <div id="day-detail-modal">
+    <button id="day-detail-close">×</button>
+    <h3 id="modal-day-name"></h3>
+    <p id="modal-temp-range"></p>
+    <p id="modal-description"></p>
+    <p id="modal-humidity"></p>
+    <p id="modal-wind"></p>
+  </div>
+  
+  <script>
+    const apiKey = '2f39af7a3bbaba9d359e8564a35ecedf';
+
+    document.getElementById('search-btn').addEventListener('click', getWeather);
+    document.getElementById('bb').addEventListener('click', useIPLocation);
+
+    function getWeather() {
+      const city = document.getElementById('city').value.trim();
+      if (!city) return alert('Please enter a city');
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if(data.cod !== 200) throw new Error(data.message);
+          displayWeather(data);
+          const hour = new Date().getHours();
+          updateBackground(data.weather[0].description, hour);
+          return fetch(forecastUrl);
+        })
+        .then(res => res.json())
+        .then(data => {
+          displayHourlyForecast(data);
+          displayWeeklyForecast(data);
+        })
+        .catch(() => alert("Error fetching weather data."));
+    }
+
+    function useIPLocation() {
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.city) {
+            document.getElementById('city').value = data.city;
+            getWeather();
+          } else {
+            fallbackIPWhoIs();
+          }
+        })
+        .catch(() => {
+          fallbackIPWhoIs();
+        });
+    }
+
+    function fallbackIPWhoIs() {
+      fetch('https://ipwho.is/')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.city) {
+            document.getElementById('city').value = data.city;
+            getWeather();
+          } else {
+            alert("Unable to get location from IP.");
+          }
+        })
+        .catch(() => alert("Unable to get location from IP."));
+    }
+
+    function displayWeather(data) {
+      const city = data.name;
+      const temp = Math.round(data.main.temp);
+      const desc = data.weather[0].description;
+      const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+      document.getElementById('weather-info').innerText = city;
+      document.getElementById('temperature').innerText = `${temp}°C`;
+      document.getElementById('description').innerText = desc.charAt(0).toUpperCase() + desc.slice(1);
+      document.getElementById('weather-icon').src = icon;
+
+      document.getElementById('result-container').style.display = 'flex';
+
+      const { humidity, pressure } = data.main;
+      const wind = data.wind.speed;
+      const clouds = data.clouds.all;
+
+      document.getElementById('details').innerHTML = `
+        <p>Humidity: ${humidity}%</p>
+        <p>Pressure: ${pressure} hPa</p>
+        <p>Wind: ${wind} m/s</p>
+        <p>Cloud Cover: ${clouds}%</p>
+      `;
+    }
+
+    function displayHourlyForecast(data) {
+      const container = document.getElementById('hourly-forecast');
+      container.innerHTML = '';
+      container.style.display = 'flex';
+
+      for (let i = 0; i < Math.min(data.list.length, 12); i++) {
+        const forecast = data.list[i];
+        const time = new Date(forecast.dt_txt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const temp = Math.round(forecast.main.temp);
+        const icon = forecast.weather[0].icon;
+        const iconUrl = `https://openweathermap.org/img/wn/${icon}.png`;
+        const pop = Math.round((forecast.pop || 0) * 100);
+
+        container.innerHTML += `
+          <div class="hourly-item">
+            <p>${time}</p>
+            <img class="forecast-icon" src="${iconUrl}" alt="icon"/>
+            <p>${temp}°C</p>
+            <p>${pop}% rain</p>
+          </div>
+        `;
+      }
+    }
+
+    function displayWeeklyForecast(data) {
+      const weekly = {};
+      const dailyDetails = {};
+
+      data.list.forEach(entry => {
+        const date = new Date(entry.dt_txt);
+        const dayKey = date.toLocaleDateString();
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+        const temp = entry.main.temp;
+        const weather = entry.weather[0];
+
+        if (!weekly[dayKey]) {
+          weekly[dayKey] = { name: dayName, min: temp, max: temp };
+          dailyDetails[dayKey] = {
+            name: dayName,
+            description: weather.description,
+            humidity: entry.main.humidity,
+            wind: entry.wind.speed,
+            min: temp,
+            max: temp
+          };
+        } else {
+          weekly[dayKey].min = Math.min(weekly[dayKey].min, temp);
+          weekly[dayKey].max = Math.max(weekly[dayKey].max, temp);
+        }
+      });
+
+      const container = document.getElementById('weekly-forecast');
+      container.innerHTML = '';
+      container.style.display = 'flex';
+
+      // Take exactly 7 days and display vertically
+      Object.entries(weekly).slice(0, 7).forEach(([key, day]) => {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'day-item';
+        dayDiv.textContent = `${day.name}: ${Math.round(day.min)}° / ${Math.round(day.max)}°`;
+        dayDiv.addEventListener('click', () => showDayDetails(dailyDetails[key]));
+        container.appendChild(dayDiv);
+      });
+    }
+
+    function showDayDetails(day) {
+      document.getElementById('modal-day-name').textContent = day.name;
+      document.getElementById('modal-temp-range').textContent = `Temp: ${Math.round(day.min)}°C - ${Math.round(day.max)}°C`;
+      document.getElementById('modal-description').textContent = `Weather: ${day.description.charAt(0).toUpperCase() + day.description.slice(1)}`;
+      document.getElementById('modal-humidity').textContent = `Humidity: ${day.humidity}%`;
+      document.getElementById('modal-wind').textContent = `Wind Speed: ${day.wind} m/s`;
+      document.getElementById('day-detail-modal').classList.add('show');
+    }
+
+    document.getElementById('day-detail-close').addEventListener('click', () => {
+      document.getElementById('day-detail-modal').classList.remove('show');
+    });
+
+    function updateBackground(desc, hour) {
+      const body = document.body;
+      let gradient;
+      desc = desc.toLowerCase();
+      if (desc.includes('clear')) {
+        gradient = hour >= 6 && hour < 18
+          ? 'linear-gradient(to bottom, #87ceeb, #4a90e2)'  // day clear sky blue
+          : 'linear-gradient(to bottom, #0f2027, #203a43, #2c5364)'; // night dark blue
+      } else if (desc.includes('cloud')) {
+        gradient = 'linear-gradient(to bottom, #a0aec0, #718096)'; // cloudy gray
+      } else if (desc.includes('rain')) {
+        gradient = 'linear-gradient(to bottom, #3a6073, #16222a)'; // rainy blue/gray
+      } else if (desc.includes('snow')) {
+        gradient = 'linear-gradient(to bottom, #e0eafc, #cfdef3)'; // snow white/blue
+      } else {
+        gradient = 'linear-gradient(to bottom, #5d8cd3, #1e3a8a)'; // default
+      }
+      body.style.background = gradient;
+    }
+  </script>
+</body>
+</html>
